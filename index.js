@@ -13,7 +13,6 @@ const {
   pausePlayback,
   playTrack
 } = require("./apiHelperFunctions")
-const { error } = require("console")
 
 const app = express()
 const corsOptions = {
@@ -32,8 +31,6 @@ const base_url = process.env.SPOTIFY_API_BASE_URL
 
 const PORT = process.env.PORT || 3000
 
-let access_token = '';
-let refresh_token = '';
 
 const generateRandomString = (length) => {
     return crypto.randomBytes(60).toString('hex').slice(0, length);
@@ -104,7 +101,7 @@ app.get("/callback", async (req, res) => {
     Authorization: 'Bearer ' + access_token}
   })
 
-      res.send(getResponse.data)
+      res.send({userData: getResponse.data, access_token, refresh_token })
     } catch (error) {
             console.error(error);
     res.status(400).json({ error: 'invalid_token' });
@@ -113,6 +110,11 @@ app.get("/callback", async (req, res) => {
 
 
 app.get('/spotify/artists/followed', async (req, res) => {
+  const access_token = req.headers.authorization?.split(' ')[1]; // Get token from "Bearer <token>"
+
+  if (!access_token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
   try {
     const data = await getFollowedArtists(access_token);
     res.json(data);
@@ -124,18 +126,28 @@ app.get('/spotify/artists/followed', async (req, res) => {
 
 // Top tracks
 app.get('/spotify/tracks/top', async (req, res) => {
+  const access_token = req.headers.authorization?.split(' ')[1]; // Get token from "Bearer <token>"
+
+  if (!access_token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
      const limit = Math.min(req.query.limit || 10, 50);
   try {
     const data = await getTopTracks(access_token, limit);
     res.json(data);
   } catch (err) {
-    console.log(error)
+    console.log(err)
     res.status(500).json({ error: 'Failed to fetch top tracks', err });
   }
 });
 
 // Now playing
 app.get('/spotify/now-playing', async (req, res) => {
+  const access_token = req.headers.authorization?.split(' ')[1]; // Get token from "Bearer <token>"
+
+  if (!access_token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
   try {
     const data = await getCurrentlyPlaying(access_token);
     res.json(data || { message: 'Nothing is playing' });
@@ -146,6 +158,12 @@ app.get('/spotify/now-playing', async (req, res) => {
 
 // Pause track
 app.post('/spotify/stop', async (req, res) => {
+  const access_token = req.headers.authorization?.split(' ')[1]; // Get token from "Bearer <token>"
+
+  if (!access_token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
+
   try {
     await pausePlayback(access_token);
     res.json({ message: 'Playback paused' });
@@ -156,6 +174,11 @@ app.post('/spotify/stop', async (req, res) => {
 
 // Play a track
 app.post('/spotify/play', async (req, res) => {
+  const access_token = req.headers.authorization?.split(' ')[1]; // Get token from "Bearer <token>"
+
+  if (!access_token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
   const { trackUri } = req.body;
   if (!trackUri) return res.status(400).json({ error: 'trackUri required' });
 
@@ -168,6 +191,11 @@ app.post('/spotify/play', async (req, res) => {
 });  
 
 app.post('/spotify/play/:trackUri', async (req, res) => {
+  const access_token = req.headers.authorization?.split(' ')[1]; // Get token from "Bearer <token>"
+
+  if (!access_token) {
+    return res.status(401).json({ error: 'Missing access token' });
+  }
   const { trackUri } = req.params;
 
   if (!trackUri) {
