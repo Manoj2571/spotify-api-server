@@ -68,14 +68,11 @@ app.get("/login", async (req, res) => {
     'user-follow-read'
   ].join(' ');
 
-    console.log("state:", storedState)
-
     res.redirect("https://accounts.spotify.com/authorize?" + querystring.stringify({
         response_type: 'code',
         client_id: client_id,
         scope: scope,
-        redirect_uri: redirect_uri,
-        state: storedState
+        redirect_uri: redirect_uri
     }))
 })
 
@@ -85,18 +82,8 @@ app.get("/test", (req, res) => {
 
 
 app.get("/callback", async (req, res) => {
+
     const code = req.query.code || null
-    const state = req.query.state || null
-    const storedState = req.cookies ? req.cookies['spotify_auth_state'] : null;
-
-    console.log("state received:", state)
-    console.log("stored state:", storedState)
-
-    if (state == null) {
-    res.redirect('/#' + querystring.stringify({ error: 'state_mismatch' }));
-  } else {
-
-    res.clearCookie('spotify_auth_state')
     const headers = {
       'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64'),
       'Content-Type': 'application/x-www-form-urlencoded'
@@ -110,7 +97,6 @@ app.get("/callback", async (req, res) => {
 
     try {
         const response = await axios.post('https://accounts.spotify.com/api/token', data, { headers });
-
         access_token = response.data.access_token;
         refresh_token = response.data.refresh_token;
 
@@ -118,7 +104,6 @@ app.get("/callback", async (req, res) => {
     } catch (error) {
             console.error(error);
     res.status(400).json({ error: 'invalid_token' });
-    }
     }
 })
 
