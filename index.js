@@ -44,6 +44,14 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })
 
+app.get("/", async (req, res) => {
+    res.send("Hello!")
+})
+
+app.get("/test", (req, res) => {
+  res.send("✅ /test route works!");
+});
+
 app.get("/login", async (req, res) => {
     storedState = generateRandomString(16)
     
