@@ -1,11 +1,11 @@
 const express = require("express")
 const cors = require("cors")
-const dotenv = require("dotenv")
 const querystring = require("querystring")
 const crypto = require("crypto")
 const axios = require("axios")
 const { json } = require("stream/consumers")
-dotenv.config()
+const cookieParser = require('cookie-parser');
+require('dotenv').config();
 const {  
   getFollowedArtists,
   getTopTracks,
@@ -23,6 +23,7 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 app.use(express.json())
+app.use(cookieParser());
 
 const client_id = process.env.SPOTIFY_CLIENT_ID
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET
@@ -46,6 +47,7 @@ app.listen(PORT, () => {
 app.get("/login", async (req, res) => {
     storedState = generateRandomString(16)
     
+    res.cookie('spotify_auth_state', storedState);
 
      const scope = [
     'user-read-playback-state',
@@ -54,6 +56,8 @@ app.get("/login", async (req, res) => {
     'user-top-read',
     'user-follow-read'
   ].join(' ');
+
+    console.log("state:", storedState)
 
     res.redirect("https://accounts.spotify.com/authorize?" + querystring.stringify({
         response_type: 'code',
@@ -64,16 +68,24 @@ app.get("/login", async (req, res) => {
     }))
 })
 
+app.get("/test", (req, res) => {
+  res.send("✅ /test route works!");
+});
+
 
 app.get("/callback", async (req, res) => {
     const code = req.query.code || null
     const state = req.query.state || null
+    const storedState = req.cookies ? req.cookies['spotify_auth_state'] : null;
 
-    if (state === null || state !== storedState) {
+    console.log("state received:", state)
+    console.log("stored state:", storedState)
+
+    if (state == null || state !== storedState) {
     res.redirect('/#' + querystring.stringify({ error: 'state_mismatch' }));
   } else {
-    res.clearCookie('spotify_auth_state');
 
+    res.clearCookie('spotify_auth_state')
     const headers = {
       'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64'),
       'Content-Type': 'application/x-www-form-urlencoded'
