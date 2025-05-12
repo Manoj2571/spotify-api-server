@@ -100,7 +100,11 @@ app.get("/callback", async (req, res) => {
         access_token = response.data.access_token;
         refresh_token = response.data.refresh_token;
 
-        res.json({ success: true, message: 'Authentication successful!' });
+        const getResponse = await axios.get("https://api.spotify.com/v1/me",{ headers: {
+    Authorization: 'Bearer ' + access_token}
+  })
+
+      res.send(getResponse.data)
     } catch (error) {
             console.error(error);
     res.status(400).json({ error: 'invalid_token' });
