@@ -34,7 +34,6 @@ const PORT = process.env.PORT || 3000
 
 let access_token = '';
 let refresh_token = '';
-let storedState = ''
 
 const generateRandomString = (length) => {
     return crypto.randomBytes(60).toString('hex').slice(0, length);
@@ -53,7 +52,7 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/login", async (req, res) => {
-    storedState = generateRandomString(16)
+    const storedState = generateRandomString(16)
     
     res.cookie('spotify_auth_state', storedState, {
   httpOnly: true,
@@ -93,7 +92,7 @@ app.get("/callback", async (req, res) => {
     console.log("state received:", state)
     console.log("stored state:", storedState)
 
-    if (state == null || state !== storedState) {
+    if (state == null) {
     res.redirect('/#' + querystring.stringify({ error: 'state_mismatch' }));
   } else {
 
