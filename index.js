@@ -55,7 +55,11 @@ app.get("/test", (req, res) => {
 app.get("/login", async (req, res) => {
     storedState = generateRandomString(16)
     
-    res.cookie('spotify_auth_state', storedState);
+    res.cookie('spotify_auth_state', storedState, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'lax' // or 'none' if needed, see below
+});
 
      const scope = [
     'user-read-playback-state',
